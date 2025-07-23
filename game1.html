@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Auto Forward Parking Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #444;
+      border: 2px solid #fff;
+    }
+    #message {
+      position: absolute;
+      top: 20px;
+      background: #0f0;
+      color: #000;
+      padding: 10px 20px;
+      font-weight: bold;
+      display: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="600"></canvas>
+<div id="message">🚗 Parked Successfully!</div>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const message = document.getElementById("message");
+
+  const car = {
+    x: 200,
+    y: 500,
+    angle: 0,
+    speed: 2,
+    width: 40,
+    height: 70,
+    turnSpeed: 0.04
+  };
+
+  const parking = {
+    x: 200,
+    y: 100,
+    width: 50,
+    height: 80
+  };
+
+  let keys = {};
+
+  document.addEventListener("keydown", (e) => keys[e.key] = true);
+  document.addEventListener("keyup", (e) => keys[e.key] = false);
+
+  function update() {
+    // Turn control only
+    if (keys["ArrowLeft"]) car.angle -= car.turnSpeed;
+    if (keys["ArrowRight"]) car.angle += car.turnSpeed;
+
+    // Auto-move forward
+    car.x += Math.sin(car.angle) * car.speed;
+    car.y -= Math.cos(car.angle) * car.speed;
+
+    // Check parking condition
+    const dx = car.x - parking.x;
+    const dy = car.y - parking.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const aligned = Math.abs(car.angle % (Math.PI * 2)) < 0.3;
+
+    if (distance < 30 && aligned) {
+      showMessage();
+    }
+  }
+
+  function showMessage() {
+    message.style.display = "block";
+    setTimeout(() => {
+      message.style.display = "none";
+      resetGame();
+    }, 2000);
+  }
+
+  function resetGame() {
+    car.x = 200;
+    car.y = 500;
+    car.angle = 0;
+  }
+
+  function drawCar() {
+    ctx.save();
+    ctx.translate(car.x, car.y);
+    ctx.rotate(car.angle);
+    ctx.fillStyle = "red";
+    ctx.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
+    ctx.restore();
+  }
+
+  function drawParkingSpot() {
+    ctx.strokeStyle = "lime";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(
+      parking.x - parking.width / 2,
+      parking.y - parking.height / 2,
+      parking.width,
+      parking.height
+    );
+  }
+
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    update();
+    drawParkingSpot();
+    drawCar();
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+</script>
+</body>
+</html>

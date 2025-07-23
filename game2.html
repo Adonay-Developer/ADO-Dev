@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Skyship Explorer Prototype</title>
+<style>
+  body {
+    margin: 0; background: #87ceeb; display: flex; justify-content: center; align-items: center; height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  canvas {
+    background: linear-gradient(to bottom, #87ceeb 0%, #d0f0ff 100%);
+    display: block;
+    border: 2px solid #444;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="game" width="800" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+// Player airship object
+const ship = {
+  x: WIDTH / 2,
+  y: HEIGHT / 2,
+  width: 60,
+  height: 30,
+  velocityX: 0,
+  velocityY: 0,
+  acceleration: 0.2,
+  maxSpeed: 4,
+  deceleration: 0.05,
+  fuel: 100,
+};
+
+// Cargo items floating in the sky
+const cargoes = [];
+const maxCargoes = 5;
+const cargoRadius = 15;
+
+// Score
+let score = 0;
+
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Generate cargo at random positions
+function spawnCargo() {
+  while (cargoes.length < maxCargoes) {
+    cargoes.push({
+      x: Math.random() * (WIDTH - cargoRadius * 2) + cargoRadius,
+      y: Math.random() * (HEIGHT - cargoRadius * 2) + cargoRadius,
+      collected: false,
+    });
+  }
+}
+
+// Draw the airship (simple rectangle + triangle for nose)
+function drawShip() {
+  ctx.fillStyle = '#663300';
+  ctx.fillRect(ship.x - ship.width/2, ship.y - ship.height/2, ship.width, ship.height);
+  // Nose triangle
+  ctx.beginPath();
+  ctx.moveTo(ship.x + ship.width/2, ship.y - ship.height/2);
+  ctx.lineTo(ship.x + ship.width/2 + 20, ship.y);
+  ctx.lineTo(ship.x + ship.width/2, ship.y + ship.height/2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Draw cargo (floating crates)
+function drawCargo(c) {
+  if (c.collected) return;
+  ctx.fillStyle = '#ffaa00';
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, cargoRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#885500';
+  ctx.stroke();
+}
+
+// Update ship physics and controls
+function updateShip() {
+  if (ship.fuel <= 0) {
+    // Out of fuel — slow down gradually
+    ship.velocityX *= 0.98;
+    ship.velocityY *= 0.98;
+    return;
+  }
+
+  // Controls: accelerate in directions
+  if (keys['w'] || keys['arrowup']) ship.velocityY -= ship.acceleration;
+  if (keys['s'] || keys['arrowdown']) ship.velocityY += ship.acceleration;
+  if (keys['a'] || keys['arrowleft']) ship.velocityX -= ship.acceleration;
+  if (keys['d'] || keys['arrowright']) ship.velocityX += ship.acceleration;
+
+  // Limit speed
+  ship.velocityX = Math.max(-ship.maxSpeed, Math.min(ship.maxSpeed, ship.velocityX));
+  ship.velocityY = Math.max(-ship.maxSpeed, Math.min(ship.maxSpeed, ship.velocityY));
+
+  // Apply deceleration if no keys pressed
+  if (!(keys['w'] || keys['arrowup'] || keys['s'] || keys['arrowdown'])) {
+    if (ship.velocityY > 0) ship.velocityY = Math.max(0, ship.velocityY - ship.deceleration);
+    else ship.velocityY = Math.min(0, ship.velocityY + ship.deceleration);
+  }
+  if (!(keys['a'] || keys['arrowleft'] || keys['d'] || keys['arrowright'])) {
+    if (ship.velocityX > 0) ship.velocityX = Math.max(0, ship.velocityX - ship.deceleration);
+    else ship.velocityX = Math.min(0, ship.velocityX + ship.deceleration);
+  }
+
+  // Update position
+  ship.x += ship.velocityX;
+  ship.y += ship.velocityY;
+
+  // Wrap around edges horizontally
+  if (ship.x < -ship.width) ship.x = WIDTH + ship.width;
+  if (ship.x > WIDTH + ship.width) ship.x = -ship.width;
+
+  // Clamp vertically (sky limit)
+  if (ship.y < ship.height / 2) ship.y = ship.height / 2;
+  if (ship.y > HEIGHT - ship.height / 2) ship.y = HEIGHT - ship.height / 2;
+
+  // Fuel consumption proportional to speed
+  const speed = Math.abs(ship.velocityX) + Math.abs(ship.velocityY);
+  ship.fuel -= speed * 0.05;
+  ship.fuel = Math.max(0, ship.fuel);
+}
+
+// Check collisions with cargoes
+function checkCargoPickup() {
+  cargoes.forEach(c => {
+    if (c.collected) return;
+    const dx = ship.x - c.x;
+    const dy = ship.y - c.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < cargoRadius + Math.max(ship.width, ship.height)/2) {
+      c.collected = true;
+      score += 10;
+      ship.fuel = Math.min(100, ship.fuel + 20); // refuel
+      // Spawn new cargo later
+      setTimeout(() => {
+        cargoes.splice(cargoes.indexOf(c), 1);
+        spawnCargo();
+      }, 3000);
+    }
+  });
+}
+
+// Draw fuel and score UI
+function drawUI() {
+  // Score
+  ctx.fillStyle = 'black';
+  ctx.font = '20px sans-serif';
+  ctx.fillText('Score: ' + score, 20, 30);
+
+  // Fuel bar
+  ctx.fillStyle = 'black';
+  ctx.fillRect(20, 50, 200, 20);
+  ctx.fillStyle = '#00cc00';
+  ctx.fillRect(20, 50, 2 * ship.fuel, 20);
+  ctx.strokeStyle = 'white';
+  ctx.strokeRect(20, 50, 200, 20);
+  ctx.fillStyle = 'white';
+  ctx.fillText('Fuel', 230, 65);
+}
+
+function drawCloud(x, y, scale) {
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.beginPath();
+  ctx.ellipse(x, y, 20 * scale, 15 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 20 * scale, y + 5 * scale, 25 * scale, 20 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 50 * scale, y, 20 * scale, 15 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+const clouds = [];
+function spawnClouds() {
+  for(let i=0; i<10; i++) {
+    clouds.push({
+      x: Math.random() * WIDTH,
+      y: Math.random() * HEIGHT * 0.7,
+      speed: 0.3 + Math.random() * 0.4,
+      scale: 0.8 + Math.random() * 0.6,
+    });
+  }
+}
+spawnClouds();
+
+function updateClouds() {
+  clouds.forEach(c => {
+    c.x -= c.speed;
+    if (c.x < -100) {
+      c.x = WIDTH + 100;
+      c.y = Math.random() * HEIGHT * 0.7;
+    }
+  });
+}
+
+function drawClouds() {
+  clouds.forEach(c => drawCloud(c.x, c.y, c.scale));
+}
+
+function gameLoop() {
+  // Update
+  updateShip();
+  updateClouds();
+  checkCargoPickup();
+
+  // Draw
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  drawClouds();
+  drawCargoes();
+  drawShip();
+  drawUI();
+
+  requestAnimationFrame(gameLoop);
+}
+
+function drawCargoes() {
+  cargoes.forEach(drawCargo);
+}
+
+spawnCargo();
+gameLoop();
+</script>
+
+</body>
+</html>

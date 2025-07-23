@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coming Soon Games</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #121212;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 40px 0 20px;
+      font-size: 36px;
+      color: #00ffe0;
+      text-align: center;
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .game-card {
+      background: #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 15px rgba(0, 255, 240, 0.1);
+      transition: transform 0.3s;
+      margin: 20px;
+      
+    }
+
+    .game-card:hover {
+      transform: scale(1.02);
+    }
+
+    .game-card h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .game-card p {
+      font-size: 16px;
+      color: #ccc;
+      margin-bottom: 15px;
+    }
+
+    .game-card button {
+      padding: 10px 20px;
+      background: #333;
+      color: #888;
+      border: none;
+      border-radius: 6px;
+      cursor: not-allowed;
+    }
+
+    @media (min-width: 768px) {
+      .game-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        
+      }
+
+      .game-card {
+        width: 45%;
+        
+        
+      }
+              a{
+    color: white;
+    text-decoration: none;
+}
+    }
+  </style>
+</head>
+<body>
+      <a href="javascript:history.back()" class="back-link">
+  &#8592; Back
+</a>
+
+  <h1>🎮  Trendings</h1>
+  <div class="game-card" id="game1">
+    <h2>🚗 Parking Car</h2>
+    <p>Race through Keyboards and park a car</p>
+    <button disabled>Trending</button>
+  </div>
+  <div class="game-card">
+    <div class="game-card" id="game2">
+    <h2>🛩️ Skyship Explorer</h2>
+    <p>Race using four direction and earn Points.</p>
+    <button disabled>Trending</button>
+  </div>
+  </div>
+  <h1>🎮  Coming Soon</h1>
+  <div class="game-container">
+    <div class="game-card">
+      <h2>🚗 Cyber Drift</h2>
+      <p>Race through neon-lit cities at warp speed. Coming 2025.</p>
+      <button disabled>Coming Soon</button>
+    </div>
+
+    <div class="game-card">
+      <h2>🕹️ Pixel Raiders</h2>
+      <p>Jump, dodge, and shoot your way through pixelated chaos!</p>
+      <button disabled>Coming Soon</button>
+    </div>
+
+    <div class="game-card">
+      <h2>👽 Voidbound</h2>
+      <p>You're not alone in the dark. Launching Q4 2025.</p>
+      <button disabled>Coming Soon</button>
+    </div>
+
+    <div class="game-card">
+      <h2>🧝 Mythborn: Awakening</h2>
+      <p>Forge your destiny in a land of forgotten gods. Coming soon.</p>
+      <button disabled>Coming Soon</button>
+    </div>
+  </div>
+
+  <script>
+    const Game1 = document.getElementById('game1');
+    const Game2 = document.getElementById('game2');
+    Game1.addEventListener('click', () => {
+      window.location.href = './game1.html';
+
+    });
+    Game2.addEventListener('click', () => {
+      window.location.href = 'game2.html';
+    })
+  </script>
+</body>
+</html>
